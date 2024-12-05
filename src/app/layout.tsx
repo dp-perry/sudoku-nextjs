@@ -25,16 +25,41 @@ export default function RootLayout({
         </header>
         <main className="flex-1 flex flex-col items-center w-full max-w-screen-lg mx-auto z-20">
           <div className='flex-1 w-full'>
-            <Suspense fallback={<Loading />}>
+            <Suspense fallback={<Loading/>}>
               {children}
             </Suspense>
           </div>
-          <div className='mb-4 text-sm text-center mx-auto text-slate-500'>
-            Feedback?<br />Find me on <a className='text-blue-600' rel="me" href="https://mastodon.social/@noctemz">Mastodon</a>
-            <div>Version: 0.9.8</div>
+          <div className='flex gap-8 justify-center mb-4'>
+            <div>
+              <div className='mb-2 text-sm text-center mx-auto text-slate-500'>
+                Find me on<br/>
+              </div>
+              <a
+                style={{background: '#bec2ff'}}
+                className='w-[140px] h-[45px] pt-1 flex justify-center items-center rounded shadow'
+                rel="me"
+                href="https://mastodon.social/@noctemz"
+              >
+                <img src={'/mastodon/wordmark-white-text.svg'} width={100}/>
+              </a>
+            </div>
+            <div>
+              <div className='mb-2 text-sm text-center mx-auto text-slate-500'>Enjoying Wingu Sudoku?</div>
+              <div className='flex justify-center'>
+                <a className='bg-blue-500 text-white py-2.5 px-2 rounded shadow' href='https://ko-fi.com/wingu_solutions'>☕ Buy me a
+                  coffee!</a>
+              </div>
+            </div>
           </div>
+          <div className='mb-4 text-sm text-center mx-auto text-slate-500'>Version: 0.9.8</div>
         </main>
       </body>
+      <Script
+        async
+        defer
+        src="https://umami.dapa.app/script.js"
+        data-website-id="38da4290-814c-4d13-ad1d-2a04ae9dd728"
+      />
     </html>
   )
 }
