@@ -6,7 +6,7 @@
     "name": "Daan Rijnkels"
   },
   "license": "Apache-2.0",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "private": false,
   "scripts": {
     "dev": "next dev -p 3001",

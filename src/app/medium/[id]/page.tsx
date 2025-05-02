@@ -4,11 +4,15 @@ import SudokuGame from "@/components/SudokuGame";
 import {mediumBoards} from "@/lib/boards/boards";
 import {mediumSolutions} from "@/lib/boards/solutions";
 
-export default function MediumPuzzle({ params }: { params: { id: string }}) {
+type Params = Promise<{ id: string }>
+
+export default async function MediumPuzzle({ params }: { params: Params}) {
+  const {id} = await params
+
   // Load puzzle data
-  const puzzle = mediumBoards.find((board) => board.puzzle_id === params.id);
+  const puzzle = mediumBoards.find((board) => board.puzzle_id === id);
   // Solution
-  const solution = mediumSolutions.find((solution) => solution.id === params.id);
+  const solution = mediumSolutions.find((solution) => solution.id === id);
 
   if (!puzzle || !solution) {
     return (

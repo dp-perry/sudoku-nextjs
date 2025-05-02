@@ -1,3 +1,5 @@
+'use client'
+
 import {CellProps, Puzzle} from "@/types/types";
 import {stringToBoard} from "@/scripts/utils";
 import { loadFromLocalStorage } from "@/scripts/persistence";

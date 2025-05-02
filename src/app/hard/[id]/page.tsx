@@ -4,11 +4,15 @@ import SudokuGame from "@/components/SudokuGame";
 import {hardBoards} from "@/lib/boards/boards";
 import {hardSolutions} from "@/lib/boards/solutions";
 
-export default function HardPuzzle({ params }: { params: { id: string }}) {
+type Params = Promise<{ id: string }>
+
+export default async function HardPuzzle({ params }: { params: Params}) {
+  const {id} = await params
+
   // Load puzzle data
-  const puzzle = hardBoards.find((board) => board.puzzle_id === params.id);
+  const puzzle = hardBoards.find((board) => board.puzzle_id === id);
   // Solution
-  const solution = hardSolutions.find((solution) => solution.id === params.id);
+  const solution = hardSolutions.find((solution) => solution.id === id);
 
   if (!puzzle || !solution) {
     return (

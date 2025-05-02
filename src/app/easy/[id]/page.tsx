@@ -4,11 +4,15 @@ import SudokuGame from "@/components/SudokuGame";
 import { easyBoards } from "@/lib/boards/boards";
 import { easySolutions } from "@/lib/boards/solutions";
 
-export default function EasyPuzzle({ params }: { params: { id: string }}) {
+
+type Params = Promise<{ id: string }>
+
+export default async function EasyPuzzle({ params }: { params: Params}) {
+  const {id} = await params
   // Load puzzle data
-  const puzzle = easyBoards.find((board) => board.puzzle_id === params.id);
+  const puzzle = easyBoards.find((board) => board.puzzle_id === id);
   // Solution
-  const solution = easySolutions.find((solution) => solution.id === params.id);
+  const solution = easySolutions.find((solution) => solution.id === id);
 
   if (!puzzle || !solution) {
     return (
