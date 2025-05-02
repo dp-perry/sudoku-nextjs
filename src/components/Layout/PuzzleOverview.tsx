@@ -1,7 +1,6 @@
 import React from 'react';
 import { Puzzle } from '@/types/types'
 import PuzzlePreview from "@/components/Layout/PuzzlePreview";
-import LinkButton from "@/components/Elements/LinkButton";
 
 type Props = {
   puzzles: Puzzle[],

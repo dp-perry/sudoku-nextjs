@@ -4,6 +4,8 @@ import './globals.css'
 import {Suspense} from "react";
 import {Loading} from "@/components/Loading";
 import Script from "next/script";
+import Link from "next/link";
+import Image from "next/image"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,7 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} w-full h-full flex flex-col bg-slate-100`}>
         <header className='text-2xl font-bold text-white p-4 text-center bg-blue-600 z-20'>
-          <a href="/">Wingu Sudoku</a>
+          <Link href="/">Wingu Sudoku</Link>
         </header>
         <main className="flex-1 flex flex-col items-center w-full max-w-screen-lg mx-auto z-20">
           <div className='flex-1 w-full'>
@@ -40,7 +42,7 @@ export default function RootLayout({
                 rel="me"
                 href="https://mastodon.social/@noctemz"
               >
-                <img src={'/mastodon/wordmark-white-text.svg'} width={100}/>
+                <Image alt={"Mastodon wordmark in white"} src={'/mastodon/wordmark-white-text.svg'} width={100} height={100} />
               </a>
             </div>
             <div>
