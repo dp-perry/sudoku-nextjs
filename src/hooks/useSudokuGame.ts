@@ -7,7 +7,8 @@ import {
   getAllNotes,
   validateBoard,
   removeNotesAfterDigit,
-  testMove, boardToString
+  testMove,
+  getRemainingDigits
 } from "@/scripts/utils";
 import {saveToLocalStorage, loadFromLocalStorage} from "@/scripts/persistence";
 import {
@@ -19,21 +20,26 @@ import {
   createHint
 } from "@/scripts/solver";
 
-// Initialize component with empty board so the UI does not flash
-const emptyBoard: Board = [];
-for (let r = 0; r < 9; r++) {
-  emptyBoard.push([]);
-  for(let c = 0; c < 9; c++) {
-    emptyBoard[r].push({
-      digit: 0,
-      state: 'locked',
-      notes: new Set()
-    })
+// Initialize component with empty board so the UI does not flash.
+// Built fresh per hook instance: as a module-level constant it was shared by every
+// puzzle and, on the server, by every request — and this board gets mutated in place.
+const createEmptyBoard = (): Board => {
+  const board: Board = [];
+  for (let r = 0; r < 9; r++) {
+    board.push([]);
+    for (let c = 0; c < 9; c++) {
+      board[r].push({
+        digit: 0,
+        state: 'locked',
+        notes: new Set()
+      })
+    }
   }
+  return board;
 }
 
 export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {error: string}, solutionBoard: Board | {error: string}) => {
-  const [boardData, setBoardData] = useState<Board>(emptyBoard);
+  const [boardData, setBoardData] = useState<Board>(createEmptyBoard);
   const [gameHistory, setGameHistory] = useState<Board[]>([]); // Allows the user to undo moves, TODO: Store in localStorage
   const [activeCell, setActiveCell] = useState<GridLoc>({r: 9, c: 9}); // Default to a Cell of the board
   const [hintCell, setHintCell] = useState<GridLoc | undefined>(undefined)
@@ -44,12 +50,45 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
   const [completion, setCompletion] = useState(0); // Percentage of puzzle completion
   const [hintLevel, setHintLevel] = useState(0) // Hint level has 3 settings, level 0 = highlight cell, 1 = explain strategy, 3 = fill in cell
   const [hint, setHint] = useState('');
+  const [solveMessage, setSolveMessage] = useState(''); // Outcome of the last "Solve the board" run
 
   // To calculate the progress, find the number of empty cells in the original puzzle
   const emptyCells = useMemo(() =>
     !('error' in initialBoardData) ? countEmptyCells(initialBoardData) : 0,
     [initialBoardData]
   );
+
+  // A cell must be selected before any control does anything. These flags let the
+  // Controls show that rule instead of silently swallowing the press.
+  const hasActiveCell = activeCell.r !== 9;
+  const activeCellLocked = hasActiveCell && boardData[activeCell.r][activeCell.c].state === 'locked';
+  const canUndo = gameHistory.length > 0;
+
+  // How many of each digit are still to be placed, used to label and retire digit buttons
+  const remainingDigits = useMemo(() => getRemainingDigits(boardData), [boardData]);
+
+  // Check one cell against the solution, flag it and count the mistake.
+  // Returns the error total after the check so the caller can persist it.
+  // Note the guard is `'error' in solutionBoard`: the failure case is an object,
+  // which is truthy, so a plain `if (!solutionBoard)` would never fire.
+  const applyValidation = (board: Board, gridLoc: GridLoc, currentErrors: number): number => {
+    if ('error' in solutionBoard) {
+      return currentErrors;
+    }
+
+    const cell = board[gridLoc.r][gridLoc.c];
+    // An emptied cell is not a mistake
+    if (cell.digit === 0) {
+      return currentErrors;
+    }
+
+    if (!testMove(solutionBoard as Board, gridLoc, cell.digit)) {
+      cell.state = 'error';
+      return currentErrors + 1;
+    }
+
+    return currentErrors;
+  }
 
   // Use useEffect to initialize boardData with a deep copy of initialBoardData or localStorage if available
   useEffect(() => {
@@ -79,26 +118,45 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
     }
   }, [completion, boardData]);
 
-  // Set a Cell as active, active means its value can be changed, erased or its notes can be changed
-  const handleSetActiveCell = useCallback((newCell: GridLoc) => {
-    setActiveCell(newCell);
-  }, [])
-
   // Add a boardState to the gameHistory so that we can use the undo button, does not persist between page loads
   const addMoveToHistory = useCallback((prevBoardState: Board) => {
     const currentHistory = [...gameHistory];
     setGameHistory([...currentHistory, prevBoardState]);
   }, [gameHistory])
 
-  // Handle updating the board state and save the previous boardState, errors + completion to localStorage
-  const updateBoardData = (newBoardState: Board) => {
+  // Handle updating the board state and persist it.
+  // Everything written here is derived from newBoardState rather than read back from
+  // state: `boardData`, `errors` and `completion` still hold the values being replaced
+  // at this point, which is what used to make storage lag a move behind.
+  const updateBoardData = (newBoardState: Board, newErrors: number = errors) => {
     setBoardData([...newBoardState]);
 
-    saveToLocalStorage(puzzle_id, {boardData: boardData, errors: errors, completion: completion});
+    if (newErrors !== errors) {
+      setErrors(newErrors);
+    }
+
+    saveToLocalStorage(puzzle_id, {
+      boardData: newBoardState,
+      errors: newErrors,
+      completion: calculateCompletion(emptyCells, newBoardState),
+    });
   }
 
-  // Update a Cell state to a new digit & state,
-  // validate the new digit with the solution
+  // Set a Cell as active, active means its value can be changed, erased or its notes can be changed.
+  // Moving to a different cell is the signal that the player is done with the previous
+  // one, so that is where its grace period ends and it gets checked.
+  const handleSetActiveCell = (newCell: GridLoc) => {
+    if (cellToValidate && (cellToValidate.r !== newCell.r || cellToValidate.c !== newCell.c)) {
+      const checkedBoard = [...boardData];
+      const nextErrors = applyValidation(checkedBoard, cellToValidate, errors);
+      setCellToValidate(undefined);
+      updateBoardData(checkedBoard, nextErrors);
+    }
+
+    setActiveCell(newCell);
+  }
+
+  // Update a Cell state to a new digit & state and open its grace period
   const setDigit = (digit: number) => {
     let currentBoardData = [...boardData];
     addMoveToHistory(deepCopy(boardData));
@@ -107,31 +165,30 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
     currentCellData.digit = (currentCellData.digit === digit) ? 0 : digit;
     currentCellData.state = 'free';
 
-    // Test the last cell that was changed, this gives users a change to correct a mistake or typo
-    if (!cellToValidate && solutionBoard || cellToValidate?.r != activeCell.r || cellToValidate.c != activeCell.c) {
-
-      // Only attempt to validate if solutionBoard was found, change the cell state on an error found
-      if (cellToValidate && solutionBoard) {
-        if ( !testMove(solutionBoard as Board, cellToValidate, currentBoardData[cellToValidate.r][cellToValidate.c].digit) ) {
-          currentBoardData[cellToValidate.r][cellToValidate.c].state = 'error';
-          setErrors(errors + 1);
-
-        }
-      }
-
-      // Update which cell needs to be validated on the next move
-      setCellToValidate(activeCell);
-    }
-
     // Update Cell data
     currentBoardData = removeNotesAfterDigit(currentBoardData, activeCell, digit);
     currentBoardData[activeCell.r][activeCell.c] = currentCellData;
 
+    // This cell now has a grace period. It is checked against the solution when the
+    // player moves to another cell, so a typo can be corrected without a penalty.
+    setCellToValidate(activeCell);
+
+    // The last solve result no longer describes this board
+    setSolveMessage('');
+
     // Reset hints to prepare for the next Cell
     resetHintLevel()
 
+    // Filling the last empty cell leaves nowhere to move on to, so the grace period
+    // has to end here instead
+    let nextErrors = errors;
+    if (countEmptyCells(currentBoardData) === 0) {
+      nextErrors = applyValidation(currentBoardData, activeCell, errors);
+      setCellToValidate(undefined);
+    }
+
     // Update the board
-    updateBoardData(currentBoardData);
+    updateBoardData(currentBoardData, nextErrors);
   }
 
   // Update a Cell state with a new note or remove a note
@@ -179,11 +236,16 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
 
   // Reset a Cell state back to empty and free, blocks on game data cells
   const handleErase = () => {
+    // No cell selected means there is nothing to erase, indexing boardData[9][9] would throw
+    if (!hasActiveCell || solvedBoard) {
+      return;
+    }
+
     const currentBoardData = [...boardData];
     const currentCellData = currentBoardData[activeCell.r][activeCell.c];
 
-    // Cannot erase Game data or once the board is solved
-    if (currentCellData.state === 'locked' || solvedBoard) {
+    // Cannot erase Game data
+    if (currentCellData.state === 'locked') {
       return;
     }
     addMoveToHistory(deepCopy(boardData));
@@ -202,15 +264,20 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
   const handleUndoLastMove = useCallback(() => {
     const currentHistory = [...gameHistory];
     const lastBoardState = currentHistory.pop();
-    if (gameHistory.length === 0 || activeCell.r === 9 || !lastBoardState || solvedBoard) {
+    // Undo acts on the history, not on the selected cell, so it does not need one
+    if (gameHistory.length === 0 || !lastBoardState || solvedBoard) {
       return;
     }
 
     setGameHistory([...currentHistory]);
 
+    // The restored board may hold a different digit in the pending cell, so the
+    // grace period no longer refers to anything meaningful
+    setCellToValidate(undefined);
+
     // Update the board
     updateBoardData(lastBoardState);
-  }, [activeCell, gameHistory, solvedBoard])
+  }, [gameHistory, solvedBoard])
 
   // Add all possible notes to each Cell
   const handleGetAllNotes = () => {
@@ -222,56 +289,54 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
     updateBoardData(boardWithNotes);
   }
 
-  // Run the Sudoku solver to attempt the complete the board, can get stuck on evil puzzles
+  // The solver only uses the solution to assert its own moves, so an unusable one is
+  // dropped rather than treated as a failure
+  const solutionOrUndefined = 'error' in solutionBoard ? undefined : solutionBoard;
+
+  // Run the Sudoku solver to attempt to complete the board, gets stuck on evil puzzles
   const handleSolveBoard = () => {
-    // Make sure there is a solution to test moves against
-    // TODO: Not really necessary anymore as the solver can solve board without it
-    if (!solutionBoard) {
-      console.error('Not a valid solutionBoard to test against')
+    const result = sudokuSolver(boardData, solutionOrUndefined);
+
+    if (result.status === 'invalid') {
+      setSolveMessage('There is a mistake on the board, the solver cannot continue');
       return;
     }
 
-    const completedBoard = sudokuSolver(boardData, solutionBoard as Board);
-    if ('error' in completedBoard) {
-      console.error('Error while solving the board');
-      return;
-    }
+    setSolveMessage(
+      result.status === 'solved'
+        ? 'Solved the board'
+        : `The solver got as far as it could, ${result.emptyCells} ${result.emptyCells === 1 ? 'cell' : 'cells'} left`
+    );
 
-    // Log the board sequence to the console in case we need it for the solution
-    boardToString(completedBoard)
     // Update the UI with the board filled in
-    updateBoardData(completedBoard);
+    updateBoardData(result.board);
   }
 
   // Run a specific solving strategy in Debugging mode
   const handleStrategy = (strategy: string) => {
-    let updatedBoard = boardData;
+    // The strategies edit the board they are handed, so never give them React state
+    const workingBoard = deepCopy(boardData);
+
     switch(strategy){
       case 'hidden_singles':
-        const single_result = solveHiddenSingles(boardData, solutionBoard as Board, false)
-        updatedBoard = single_result.board!
-        break;
+        updateBoardData(solveHiddenSingles(workingBoard, solutionOrUndefined).board);
+        return;
       case 'naked_pairs':
-        const pair_result = findNakedPairs(boardData)
-        updatedBoard = pair_result.board!;
-        break;
+        updateBoardData(findNakedPairs(workingBoard).board);
+        return;
       case 'naked_triples':
-        const triple_result = findNakedTriples(boardData)
-        updatedBoard = triple_result.board;
-        break
+        updateBoardData(findNakedTriples(workingBoard).board);
+        return;
       case 'pointing_pairs':
-        const pointed_result = findPointingPairs(boardData)
-        updatedBoard = pointed_result.board;
-        break
+        updateBoardData(findPointingPairs(workingBoard).board);
+        return;
       default:
         return
     }
-
-    updateBoardData(updatedBoard);
   }
 
   const requestHint = () => {
-    const result = createHint(boardData, solutionBoard as Board)
+    const result = createHint(boardData, solutionOrUndefined)
     if ('error' in result) {
       console.error('Could not find a hint for this board')
       return;
@@ -326,11 +391,16 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
   return {
     boardData, setBoardData,
     activeCell,
+    hasActiveCell,
+    activeCellLocked,
+    canUndo,
+    remainingDigits,
     hintCell,
     solvedBoard,
     notesActive, setNotesActive,
     errors,
     completion,
+    hintLevel,
     handleSetActiveCell,
     handleClickControlDigit,
     handleErase,
@@ -340,6 +410,7 @@ export const useSudokuGame = (puzzle_id: string, initialBoardData: Board | {erro
     handleStrategy,
     requestHint,
     hint,
+    solveMessage,
     resetHintCell,
   }
 }

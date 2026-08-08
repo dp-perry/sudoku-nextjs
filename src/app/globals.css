@@ -1,26 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* The side-by-side play layout: wide enough for a board plus a control panel, and
+   landscape. A plain min-width breakpoint would also catch a portrait iPad Pro, which
+   is 1024px wide and has to stay stacked — hence a full media query rather than a
+   `--breakpoint-*` theme value. */
+@custom-variant play {
+  @media (min-width: 900px) and (min-aspect-ratio: 1/1) {
+    @slot;
+  }
+}
+
+@theme {
+  --color-primary: #437fff;
+  --color-primary-hover: #2f6ef5;
+  --color-primary-active: #255ddb;
+  --color-primary-soft: #e8efff;
+
+  /* Minimum comfortable touch target on a tablet */
+  --spacing-touch: 56px;
+}
 
 html, body {
   width: 100%;
   height: 100%;
 }
 
+/* Transition colour and shadow only. `all` would also animate the press
+   transform on buttons, which needs to feel instant. */
 button, a {
-  transition: all 300ms;
+  transition: background-color 200ms, border-color 200ms, color 200ms, box-shadow 200ms;
 }
 
-/* Backgrounds */
-.bg-primary {
-  background: linear-gradient(180deg, hsla(0, 0%, 100%, 0.1), hsla(0, 0%, 100%, 0)), #437fff;
-}
-
-.bg-primary:hover {
-  background: linear-gradient(180deg, hsla(0, 0%, 100%, .14), hsla(0, 0%, 100%, 0)), #437fff;
-}
-
-/* Text */
-.text-primary {
-  color: #437fff;
+/* The board sizes itself from the viewport rather than from breakpoints, so it
+   grows on a tablet instead of stopping at the old fixed 585px.
+   The vw term governs portrait and phone, the vh term governs landscape. */
+.sudoku-board {
+  --cell: clamp(32px, min(10vw, 8.5vh), 72px);
 }

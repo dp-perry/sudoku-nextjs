@@ -1,10 +1,16 @@
-import PuzzleOverview from "@/components/Layout/PuzzleOverview";
 import React from "react";
-import {evilBoards} from "@/lib/boards/boards";
+import PuzzleOverview from "@/components/Layout/PuzzleOverview";
+import { getDifficulty } from "@/lib/difficulties";
 
 const Page = () => {
+  const difficulty = getDifficulty('evil');
   return(
-    <PuzzleOverview puzzles={evilBoards} type='evil' title={'Evil Sudoku Puzzles'} />
+    <PuzzleOverview
+      puzzles={difficulty.puzzles}
+      type={difficulty.key}
+      title={difficulty.listTitle}
+      description={difficulty.description}
+    />
   )
 }
 

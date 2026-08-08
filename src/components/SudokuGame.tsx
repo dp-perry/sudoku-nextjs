@@ -1,7 +1,7 @@
 'use client';
 import React from "react";
 import { deepCopy, stringToBoard } from "@/scripts/utils";
-import { Board, Puzzle, Solution } from "@/types/types";
+import { Puzzle, Solution } from "@/types/types";
 import { useSudokuGame } from '@/hooks/useSudokuGame';
 import { clearPuzzleProgress } from "@/scripts/persistence";
 
@@ -23,11 +23,16 @@ export default function SudokuGame({ title, puzzle, solution }: SudokuGame){
   const {
     boardData, setBoardData,
     activeCell,
+    hasActiveCell,
+    activeCellLocked,
+    canUndo,
+    remainingDigits,
     hintCell,
     solvedBoard,
     notesActive, setNotesActive,
     errors,
     completion,
+    hintLevel,
     handleSetActiveCell,
     handleClickControlDigit,
     handleErase,
@@ -37,6 +42,7 @@ export default function SudokuGame({ title, puzzle, solution }: SudokuGame){
     handleStrategy,
     requestHint,
     hint,
+    solveMessage,
     resetHintCell
   } = useSudokuGame(
     puzzle.puzzle_id, initialBoardData, solutionBoard
@@ -44,7 +50,9 @@ export default function SudokuGame({ title, puzzle, solution }: SudokuGame){
 
   const handleClearPuzzleProgress = () => {
     clearPuzzleProgress(puzzle.puzzle_id);
-    setBoardData(deepCopy(initialBoardData));
+    if (!('error' in initialBoardData)) {
+      setBoardData(deepCopy(initialBoardData));
+    }
   }
 
   if ('error' in initialBoardData || 'error' in solutionBoard) {
@@ -56,55 +64,49 @@ export default function SudokuGame({ title, puzzle, solution }: SudokuGame){
   }
 
   return (
-    <div className='flex-1 flex flex-col'>
-      <NotesContext.Provider value={{ notesActive, setNotesActive }}>
-        <div className='flex-1 flex flex-col gap-4 mb-8 w-[585px]'>
-          <div className='flex flex-col gap-4 w-full'>
-            <div className="">
-              <div className="font-bold text-lg">{title}:  {completion}%</div>
-              <div>
-              {
-                solvedBoard ?
-                  `You finished the sudoku with ${errors} errors!` : `Errors: ${errors}`
-              }
-              </div>
-            </div>
-
-            <SudokuBoard
-              boardData={boardData}
-              activeCell={activeCell}
-              hintCell={hintCell}
-              resetHintCell={resetHintCell}
-              setActiveCell={(gridLoc) => handleSetActiveCell(gridLoc)}
-              solvedBoard={solvedBoard}
-              debugMode={debugMode}
-            />
-
-            {
-              hint &&
-              <div>
-                <div className='bg-white rounded-xl p-2 w-fit mx-auto shadow text-sm'>{hint}</div>
-              </div>
-            }
-          </div>
-
-          <Controls
-            setDigit={(digit) => handleClickControlDigit(digit)}
-            emptyCell={() => handleErase()}
-            undoLastMove={() => handleUndoLastMove()}
-            solveBoard={() => handleSolveBoard()}
-            getAllNotes={() => handleGetAllNotes()}
-            handleStrategy={handleStrategy}
+    <NotesContext.Provider value={{ notesActive, setNotesActive }}>
+      {/* Stacked on phone and portrait tablet, board beside the controls in landscape */}
+      <div className='flex-1 flex flex-col play:flex-row play:items-start justify-center gap-6 play:gap-10 w-full'>
+        <div className='flex flex-col gap-3 items-center'>
+          <SudokuBoard
+            boardData={boardData}
+            activeCell={activeCell}
+            hintCell={hintCell}
+            resetHintCell={resetHintCell}
+            setActiveCell={(gridLoc) => handleSetActiveCell(gridLoc)}
+            solvedBoard={solvedBoard}
             debugMode={debugMode}
-            requestHint={requestHint}
           />
+
+          {hint &&
+            <div className='bg-white rounded-xl px-3 py-2 max-w-full mx-auto shadow-sm text-sm text-center'>
+              {hint}
+            </div>
+          }
         </div>
 
-      </NotesContext.Provider>
-
-      <div className='text-sm text-center'>
-        <div onClick={() => handleClearPuzzleProgress()} className='underline text-red-600 cursor-pointer'>Clear puzzle progress</div>
+        <Controls
+          title={title}
+          completion={completion}
+          errors={errors}
+          solvedBoard={solvedBoard}
+          hasActiveCell={hasActiveCell}
+          activeCellLocked={activeCellLocked}
+          canUndo={canUndo}
+          remainingDigits={remainingDigits}
+          hintLevel={hintLevel}
+          solveMessage={solveMessage}
+          setDigit={(digit) => handleClickControlDigit(digit)}
+          emptyCell={() => handleErase()}
+          undoLastMove={() => handleUndoLastMove()}
+          solveBoard={() => handleSolveBoard()}
+          getAllNotes={() => handleGetAllNotes()}
+          clearProgress={() => handleClearPuzzleProgress()}
+          handleStrategy={handleStrategy}
+          debugMode={debugMode}
+          requestHint={requestHint}
+        />
       </div>
-    </div>
+    </NotesContext.Provider>
   )
 }

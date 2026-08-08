@@ -1,6 +1,7 @@
 import React from 'react';
 import { Puzzle } from '@/types/types'
 import PuzzlePreview from "@/components/Layout/PuzzlePreview";
+import BackLink from "@/components/Elements/BackLink";
 
 type Props = {
   puzzles: Puzzle[],
@@ -11,20 +12,21 @@ type Props = {
 
 export default function PuzzleOverview({puzzles, type, title, description = ''}: Props) {
   return(
-    <div className='p-8 flex flex-col gap-4 w-full h-full'>
-      <div className={'w-full mb-2 text-slate-700'}>
-        <a href={'/'}>{`<-- Return to menu`}</a>
-      </div>
-      <div className=''>
+    <div className='p-4 md:p-8 flex flex-col gap-4 w-full h-full'>
+      <BackLink href='/'>Menu</BackLink>
+
+      <div>
         <div className='text-center text-lg font-semibold'>
           {title}
         </div>
         {
           description &&
-          <div className='text-center'>{description}</div>
+          <div className='text-center text-zinc-500'>{description}</div>
         }
       </div>
-      <div className='flex w-full flex-wrap justify-center gap-4'>
+
+      {/* A grid keeps the preview cards in columns instead of reflowing raggedly */}
+      <div className='grid gap-3 md:gap-4 justify-center grid-cols-[repeat(auto-fill,minmax(190px,1fr))] max-w-5xl w-full mx-auto'>
         {puzzles.map((puzzle, index) => (
           <PuzzlePreview key={index} puzzle={puzzle} />
         ))}

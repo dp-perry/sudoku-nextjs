@@ -12,7 +12,7 @@ type ModalProps = {
 }
 
 const sizeClasses = {
-  'sm': 'max-w-screen-sm',
+  'sm': 'w-full max-w-md',
   'md': 'w-[500px]',
   'lg': 'md:w-[750px] w-full',
   'full': 'w-full'
@@ -22,7 +22,7 @@ const Modal = ({ title, size = 'md', canClose = true, onClose, children }: Modal
   const classes = `${sizeClasses[size]} flex flex-col max-h-full my-4 bg-white rounded-t-xl md:rounded-xl shadow-2xl shadow-zinc-950/50 border border-zinc-200 overflow-hidden`;
   return (
     <Blanket onClickOutside={onClose}>
-      <div className={classes}>
+      <div className={classes} role='dialog' aria-modal='true'>
         {
           title &&
           <div
@@ -31,7 +31,7 @@ const Modal = ({ title, size = 'md', canClose = true, onClose, children }: Modal
             {canClose &&
             <button
               onClick={onClose}
-              className="h-[36px] w-[36px] hover:bg-zinc-100 rounded-md flex items-center justify-center"
+              className="h-[36px] w-[36px] hover:bg-zinc-100 rounded-md flex items-center justify-center cursor-pointer"
             >
               <XMarkIcon className="w-6 h-6 opacity-70"/>
             </button>

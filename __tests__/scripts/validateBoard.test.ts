@@ -17,6 +17,8 @@ describe('validateBoard', () => {
   });
 
   it('should return false for an invalid board', () => {
+    // stringToBoard rejects this string, so validateBoard is handed {error: ...} rather
+    // than a grid. It has to say false, not throw part way through the row scan.
     const boardData = stringToBoard(invalidBoard);
     /* @ts-ignore */
     expect(validateBoard(boardData)).toBe(false);

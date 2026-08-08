@@ -11,7 +11,17 @@ export const loadFromLocalStorage = (puzzle_id: string): {boardData: Board, erro
     return false;
   }
 
-  const puzzleData = JSON.parse(storageObj);
+  let puzzleData;
+  try {
+    puzzleData = JSON.parse(storageObj);
+  } catch {
+    console.error(`Could not read stored progress for ${puzzle_id}`);
+    return false;
+  }
+
+  if (!puzzleData?.boardData) {
+    return false;
+  }
 
   const processed_puzzle: {digit: number; state: string; notes: Set<unknown>; r: number; c: number;}[][] = [];
   for (let r = 0; r < 9; r++) {
@@ -65,6 +75,26 @@ export const saveToLocalStorage = (puzzle_id: string, puzzleData: {boardData: Bo
 
   localStorage.setItem(puzzle_id, JSON.stringify(storageData));
   return true;
+}
+
+// Read only the stored completion percentage. The menu needs this for every puzzle
+// at once, and rebuilding 81 cells per puzzle just to read one number is wasteful.
+export const getStoredCompletion = (puzzle_id: string): number => {
+  if (typeof localStorage === "undefined") {
+    return 0;
+  }
+
+  const storageObj = localStorage.getItem(puzzle_id);
+  if (!storageObj) {
+    return 0;
+  }
+
+  try {
+    const puzzleData = JSON.parse(storageObj);
+    return typeof puzzleData?.completion === 'number' ? puzzleData.completion : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export const clearPuzzleProgress = (puzzle_id: string) => {

@@ -26,7 +26,7 @@ const gaps = {
 export default function Card({className, size = 'md', gap = 'md', padded = true, children}: CardProps) {
   const classes = [
     'rounded-2xl bg-white',
-    'flex flex-col shadow',
+    'flex flex-col shadow-sm',
     `${gaps[gap]} `,
     `${sizes[size]} `,
     `${padded ? 'p-6 md:p-8' : 'p-0'}`,

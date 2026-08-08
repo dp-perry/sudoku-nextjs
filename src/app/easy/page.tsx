@@ -1,14 +1,15 @@
-import PuzzleOverview from "@/components/Layout/PuzzleOverview";
 import React from "react";
-import {easyBoards} from "@/lib/boards/boards";
+import PuzzleOverview from "@/components/Layout/PuzzleOverview";
+import { getDifficulty } from "@/lib/difficulties";
 
 const Page = () => {
+  const difficulty = getDifficulty('easy');
   return(
     <PuzzleOverview
-      puzzles={easyBoards}
-      type={'easy'}
-      title={'Easy Sudoku Puzzles'}
-      description={'These require no special techniques or guessing'}
+      puzzles={difficulty.puzzles}
+      type={difficulty.key}
+      title={difficulty.listTitle}
+      description={difficulty.description}
     />
   )
 }

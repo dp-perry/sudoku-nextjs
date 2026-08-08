@@ -1,9 +1,7 @@
-import Link from "next/link";
-
 import SudokuGame from "@/components/SudokuGame";
+import BackLink from "@/components/Elements/BackLink";
 import { easyBoards } from "@/lib/boards/boards";
 import { easySolutions } from "@/lib/boards/solutions";
-
 
 type Params = Promise<{ id: string }>
 
@@ -21,12 +19,11 @@ export default async function EasyPuzzle({ params }: { params: Params}) {
   }
 
   return (
-    <div className='h-full flex flex-col p-4'>
+    <div className='h-full flex flex-col p-2 md:p-6 gap-2'>
+      <BackLink href='/easy'>Easy puzzles</BackLink>
 
-      <div className='w-full mb-6 text-slate-700'><Link href='/easy'>{'<-- Return to puzzle selection'}</Link></div>
-
-      <div className="flex-1 flex flex-col gap-4 mx-auto">
-        <SudokuGame title='Sudoku - Easy' puzzle={puzzle} solution={solution} />
+      <div className="flex-1 flex flex-col w-full">
+        <SudokuGame title={puzzle.name} puzzle={puzzle} solution={solution} />
       </div>
     </div>
   )

@@ -1,28 +1,44 @@
-'use client'
-
-import { clearAppData } from "@/scripts/persistence";
-import Button from "@/components/Controls/DigitButton";
-import Card from "@/components/Panels/Card";
+import { Cog6ToothIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 import LinkButton from "@/components/Elements/LinkButton";
+import DifficultyTile from "@/components/Layout/DifficultyTile";
+import SiteFooter from "@/components/Layout/SiteFooter";
+import { difficulties } from "@/lib/difficulties";
 
 export default function Home() {
-  const handleClearAppData = () => {
-    clearAppData();
-  }
-
   return (
-    <div className='p-12 w-full h-full flex-1 flex flex-col'>
+    <div className='w-full flex-1 flex flex-col p-4 md:p-8'>
+      <div className='w-full max-w-3xl mx-auto flex flex-col gap-6'>
+        <h1 className='text-center font-semibold text-2xl text-primary'>Pick a puzzle</h1>
 
-      <div className='w-fit flex flex-col gap-4 max-w-lg min-w-32 mx-auto'>
-        <div className='text-center font-semibold text-2xl text-blue-600 mb-8'>Menu</div>
-        <LinkButton href={'/easy'}>Easy puzzles</LinkButton>
-        <LinkButton href={'/medium'}>Medium puzzles</LinkButton>
-        <LinkButton href={'/hard'}>Hard puzzles</LinkButton>
-        <LinkButton href={'/evil'}>Evil puzzles</LinkButton>
-        <LinkButton href={'/settings'}>Settings</LinkButton>
-        <LinkButton href={'/about'}>About</LinkButton>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+          {difficulties.map((difficulty) => (
+            <DifficultyTile key={difficulty.key} difficulty={difficulty} />
+          ))}
+        </div>
+
+        <div className='flex justify-center gap-3'>
+          <LinkButton
+            href='/settings'
+            variant='secondary'
+            density='comfortable'
+            fullWidth={false}
+            icon={<Cog6ToothIcon className='size-5' />}
+          >
+            Settings
+          </LinkButton>
+          <LinkButton
+            href='/about'
+            variant='secondary'
+            density='comfortable'
+            fullWidth={false}
+            icon={<InformationCircleIcon className='size-5' />}
+          >
+            About
+          </LinkButton>
+        </div>
+
+        <SiteFooter />
       </div>
-
     </div>
   )
 }

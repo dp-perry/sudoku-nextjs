@@ -23,7 +23,8 @@ export const stringToBoard = (boardString: string): {error: string} | Board => {
       ));
 }
 
-export const boardToString = (board: Board) => {
+/* Convert a board Array back to the space separated string format used in lib/boards */
+export const boardToString = (board: Board): string => {
     let board_sequence = '';
     for (let r = 0; r < board.length; r++) {
         for (let c = 0; c < board[r].length; c++) {
@@ -33,7 +34,7 @@ export const boardToString = (board: Board) => {
             }
         }
     }
-    console.log(board_sequence)
+    return board_sequence.trim();
 }
 
 // Test if a group is completely filled, 1 to 9
@@ -90,8 +91,10 @@ export const validateMove = (boardData: Board, gridLoc: GridLoc) => {
 
 // Validate the entire board, does not test against the solution it only checks for double digits
 export const validateBoard = (boardData: Board) => {
-    // Test board validity
-    if (!boardData) {
+    // Test board validity. stringToBoard hands back {error: ...} for a malformed string,
+    // and callers do not always narrow it, so anything that is not a 9-row grid fails here
+    // rather than throwing part way through.
+    if (!boardData || !Array.isArray(boardData) || boardData.length !== 9) {
         console.error('Invalid board');
         return false;
     }
@@ -162,29 +165,32 @@ export const getAllNotes = (boardData: Board) => {
     return boardData;
 }
 
-// Calculate how many of each digit still need to be entered
-export const getRemainingDigits = (boardData: Board) => {
-    // Test board validity
-    if (!boardData) {
-        console.error('Invalid board');
-        return false;
-    }
+// Calculate how many of each digit still need to be entered.
+// A complete grid holds exactly 9 of every digit, so remaining = 9 - placed.
+export const getRemainingDigits = (boardData: Board): DigitCount => {
     const digits: DigitCount = {
-        '1': 0,
-        '2': 0,
-        '3': 0,
-        '4': 0,
-        '5': 0,
-        '6': 0,
-        '7': 0,
-        '8': 0,
-        '9': 0,
+        '1': 9,
+        '2': 9,
+        '3': 9,
+        '4': 9,
+        '5': 9,
+        '6': 9,
+        '7': 9,
+        '8': 9,
+        '9': 9,
     };
 
-    // Check rows
+    if (!boardData) {
+        console.error('Invalid board');
+        return digits;
+    }
+
     for (let row of boardData) {
         for (let cell of row) {
-            digits[String(cell)] = digits[String(cell)] + 1;
+            // Skip empty cells, they carry digit 0
+            if (cell.digit >= 1 && cell.digit <= 9) {
+                digits[String(cell.digit)] = digits[String(cell.digit)] - 1;
+            }
         }
     }
 

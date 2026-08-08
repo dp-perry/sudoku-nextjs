@@ -12,9 +12,11 @@ describe('stringToBoard', () => {
     expect(boardData[0].length).toBe(9);
   });
 
-  it('should return false for an invalid string', () => {
+  it('should return an error for an invalid string', () => {
     const boardData = stringToBoard(invalidBoard);
-    /* @ts-ignore */
-    expect(boardData).toBe(false);
+    // Functions that can fail return {error} rather than false, so callers narrow with
+    // `'error' in result` — a falsy check would never fire on a truthy object
+    expect('error' in boardData).toBe(true);
+    expect(boardData).toEqual({error: 'Not a valid board'});
   });
 })

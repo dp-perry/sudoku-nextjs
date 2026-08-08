@@ -3,7 +3,7 @@
   "description": "Simple sudoku app to enjoy a Sudoku on a mobile device without ads",
   "author": {
     "email": "info@wingusol.com",
-    "name": "Daan Rijnkels"
+    "name": "Daan Perry"
   },
   "license": "Apache-2.0",
   "version": "0.9.8",
@@ -13,29 +13,32 @@
     "build": "next build",
     "start": "next start -p 4009",
     "test": "vitest",
+    "test:run": "vitest run",
     "lint": "next lint"
   },
   "dependencies": {
-    "@heroicons/react": "^2.2",
-    "dexie": "^3.2.4",
+    "@heroicons/react": "^2.2.0",
+    "dexie": "^3.2.7",
     "dexie-react-hooks": "^1.1.7",
-    "next": "15.3.1",
-    "react": "^19.1",
-    "react-dom": "^19.1"
+    "next": "^16.3.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
   },
   "devDependencies": {
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/node": "^20",
-    "@types/react": "^19.1",
-    "@types/react-dom": "^19.1",
-    "@vitejs/plugin-react": "^4.4",
-    "autoprefixer": "^10.0.1",
-    "eslint": "^9.25",
-    "eslint-config-next": "^15.3",
-    "jsdom": "^23.2.0",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0",
-    "typescript": "^5.7.2"
+    "@tailwindcss/postcss": "^4.3.3",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.3",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.5.4",
+    "eslint": "^10.8.1",
+    "eslint-config-next": "^16.3.0",
+    "jsdom": "^30.0.1",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }

@@ -1,14 +1,12 @@
-import Link from "next/link";
-
 import SudokuGame from "@/components/SudokuGame";
+import BackLink from "@/components/Elements/BackLink";
 import { evilBoards } from "@/lib/boards/boards";
 import { evilSolutions } from "@/lib/boards/solutions";
 
 type Params = Promise<{ id: string }>
 
-export default async function EasyPuzzle({ params }: { params: Params}) {
-  const {id} = await params;
-
+export default async function EvilPuzzle({ params }: { params: Params}) {
+  const {id} = await params
   // Load puzzle data
   const puzzle = evilBoards.find((board) => board.puzzle_id === id);
   // Solution
@@ -21,12 +19,11 @@ export default async function EasyPuzzle({ params }: { params: Params}) {
   }
 
   return (
-    <div className='p-4'>
+    <div className='h-full flex flex-col p-2 md:p-6 gap-2'>
+      <BackLink href='/evil'>Evil puzzles</BackLink>
 
-      <div className='w-full mb-6 text-slate-700'><Link href='/evil'>{'<-- Return to puzzle selection'}</Link></div>
-
-      <div className="flex flex-col gap-4 max-w-fit mx-auto">
-        <SudokuGame title='Sudoku - Evil' puzzle={puzzle} solution={solution} />
+      <div className="flex-1 flex flex-col w-full">
+        <SudokuGame title={puzzle.name} puzzle={puzzle} solution={solution} />
       </div>
     </div>
   )

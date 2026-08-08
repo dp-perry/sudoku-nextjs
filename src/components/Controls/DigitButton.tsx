@@ -1,22 +1,39 @@
+import Button from "@/components/Form/Button";
+
 type DigitButtonProps = {
-  children: React.ReactNode,
-  type?: 'button' | 'submit',
+  digit: number,
+  /** How many of this digit are still to be placed on the board */
+  remaining: number,
   notesActive: boolean,
-  ariaToggle?: boolean,
-  ariaLabel?: string,
+  disabled?: boolean,
   onClick?: () => void
 }
-const DigitButton  = ({children, type = "button", notesActive, ariaToggle = false, ariaLabel, onClick}: DigitButtonProps) => {
+
+const DigitButton = ({digit, remaining, notesActive, disabled = false, onClick}: DigitButtonProps) => {
+  const placed = remaining <= 0;
+
   return (
-    <button
-      type={type}
+    <Button
+      variant={notesActive ? 'secondary' : 'primary'}
+      density='square'
       onClick={onClick}
-      className={`flex justify-center items-center w-full py-2 px-4 rounded-xl text-white shadow overflow-hidden cursor-pointer transition-colors ${notesActive ? 'bg-gray-400' : 'bg-gradient-to-br from-blue-400 to-blue-600'}`}
-      aria-pressed={ariaToggle ? false : undefined}
-      {...(ariaLabel ? { 'aria-label': ariaLabel } : {})}
+      disabled={disabled || placed}
+      ariaLabel={
+        notesActive
+          ? `Toggle note ${digit}, ${remaining} left to place`
+          : `Enter ${digit}, ${remaining} left to place`
+      }
+      className={`aspect-square text-2xl md:text-[32px] ${notesActive ? 'text-emerald-700 border-emerald-300' : ''}`}
     >
-      {children}
-    </button>
+      {digit}
+      {/* Remaining count, hidden from assistive tech since the label already says it */}
+      <span
+        aria-hidden='true'
+        className={`absolute top-1 right-1.5 md:top-1.5 md:right-2.5 text-xs md:text-[15px] font-semibold leading-none ${notesActive ? 'text-emerald-600' : 'text-white/80'}`}
+      >
+        {remaining > 0 ? remaining : ''}
+      </span>
+    </Button>
   )
 }
 

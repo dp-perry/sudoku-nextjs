@@ -1,5 +1,3 @@
-import {number} from "prop-types";
-
 export type GridLoc = {
   r: number
   c: number
