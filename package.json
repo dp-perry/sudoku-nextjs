@@ -6,11 +6,12 @@
     "name": "Daan Perry"
   },
   "license": "Apache-2.0",
-  "version": "0.9.8",
+  "version": "1.0.0",
   "private": false,
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
+    "package": "next build && node scripts/package-build.mjs",
     "start": "next start -p 4009",
     "test": "vitest",
     "test:run": "vitest run",

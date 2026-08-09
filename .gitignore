@@ -15,6 +15,7 @@
 
 # production
 /build
+/deploy
 /server_files
 
 # misc
